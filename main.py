@@ -49,6 +49,32 @@ def nearest_neighbour_heuristic(px, py, demand, capacity, depot):
     """
 
     # TODO - Implement the Nearest Neighbour Heuristic to generate VRP solutions.
+    # 1. Initialise a solution: route starting from the depot
+
+    # 2. Append the nearest feasible node to the end of the current route
+    #       Feasible: node is unvisited, after insertion total demand of the route
+    #       does not exceed the capacity
+
+    # 3. If no feasible node, close the current route (return to the depot)
+    #       Create a new route starting from the depot
+
+    # 4. Repeat 2. and 3. until all nodes are visited
+    routes = list()
+    route = list()
+    route.append(depot)
+    last_node = depot
+    next_node = None
+    dist_to_next_node = sys.float_info.max
+    route_capacity = capacity
+
+    # For each node
+    for index1 in range(len(px)):
+        # Check each node not yet visited and feasible
+        if index1 not in route and demand[index1] <= route_capacity:
+            # Find best distance to next node
+            if utility.calculate_euclidean_distance(px, py, last_node, index1) < dist_to_next_node:
+                next_node = index1
+                dist_to_next_node = utility.calculate_euclidean_distance(px, py, last_node, next_node)
 
     return None
 
