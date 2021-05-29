@@ -1,3 +1,5 @@
+import sys
+
 import utility as utility
 import loader as loader
 import numpy as np
@@ -21,10 +23,10 @@ def main():
     # Executing and visualizing the nearest neighbour VRP heuristic.
     # Uncomment it to do your assignment!
 
-    # nnh_solution = nearest_neighbour_heuristic(px, py, demand, capacity, depot)
-    # nnh_distance = utility.calculate_total_distance(nnh_solution, px, py, depot)
-    # print("Nearest Neighbour VRP Heuristic Distance:", nnh_distance)
-    # utility.visualise_solution(nnh_solution, px, py, depot, "Nearest Neighbour Heuristic")
+    nnh_solution = nearest_neighbour_heuristic(px, py, demand, capacity, depot)
+    nnh_distance = utility.calculate_total_distance(nnh_solution, px, py, depot)
+    print("Nearest Neighbour VRP Heuristic Distance:", nnh_distance)
+    utility.visualise_solution(nnh_solution, px, py, depot, "Nearest Neighbour Heuristic")
 
     # Executing and visualizing the saving VRP heuristic.
     # Uncomment it to do your assignment!
@@ -59,25 +61,50 @@ def nearest_neighbour_heuristic(px, py, demand, capacity, depot):
     #       Create a new route starting from the depot
 
     # 4. Repeat 2. and 3. until all nodes are visited
-    routes = list()
+    # Nodes identified by index
     route = list()
-    route.append(depot)
-    last_node = depot
-    next_node = None
-    dist_to_next_node = sys.float_info.max
-    route_capacity = capacity
+    tour = list()
+    tourDemand = 0
+    while True: #Continues until all nodes are in the route
+        nextNode = None
+        nextNodeDist = sys.maxsize
+        #Find nearest feasible node
+        for node in range(len(px)):
+            # If the node is unvisited
+            if node not in tour and not routeContainsNode(route, node):
+                # If capacity not exceeded after insertion
+                if tourDemand + demand[node] <= capacity:
+                    # See if nearest so far
+                    if len(tour) == 0:
+                        nextNode = node
+                        nextNodeDist = utility.calculate_euclidean_distance(px,py, depot, node)
+                    elif utility.calculate_euclidean_distance(px, py, tour[-1], node) < nextNodeDist:
+                        nextNode = node
 
-    # For each node
-    for index1 in range(len(px)):
-        # Check each node not yet visited and feasible
-        if index1 not in route and demand[index1] <= route_capacity:
-            # Find best distance to next node
-            if utility.calculate_euclidean_distance(px, py, last_node, index1) < dist_to_next_node:
-                next_node = index1
-                dist_to_next_node = utility.calculate_euclidean_distance(px, py, last_node, next_node)
+        # If no feasible node
+        if nextNode is None:
+            route.append(tour)
+            tour.clear()
+        else:
+            tour.append(nextNode)
+        if routeCheck(route, len(px)):
+            break
+    return route
 
-    return None
 
+def routeCheck(route, nodesLength):
+    count: int = 0
+    for tour in route:
+        for i in tour:
+            count += 1
+    return count == nodesLength
+
+def routeContainsNode(route, node):
+    for tour in route:
+        for i in tour:
+            if i is node:
+                return True
+    return False
 
 def savings_heuristic(px, py, demand, capacity, depot):
 
