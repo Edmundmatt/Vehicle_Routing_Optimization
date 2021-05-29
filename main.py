@@ -64,48 +64,48 @@ def nearest_neighbour_heuristic(px, py, demand, capacity, depot):
     # Nodes identified by index
     route = list()
     tour = list()
-    tourDemand = 0
+    tour_demand = 0
     while True: #Continues until all nodes are in the route
-        nextNode = None
-        nextNodeDist = sys.maxsize
+        next_node = None
+        next_node_dist = sys.maxsize
         #Find nearest feasible node
         for node in range(len(px)):
             # If the node is unvisited
-            if node not in tour and not routeContainsNode(route, node):
+            if node not in tour and not route_contains_node(route, node):
                 # If capacity not exceeded after insertion
-                if tourDemand + demand[node] <= capacity:
+                if tour_demand + demand[node] <= capacity:
                     # See if nearest so far
                     if len(tour) == 0:
-                        nextNode = node
-                        nextNodeDist = utility.calculate_euclidean_distance(px,py, depot, node)
-                    elif utility.calculate_euclidean_distance(px, py, tour[-1], node) < nextNodeDist:
-                        nextNode = node
+                        next_node = node
+                        next_node_dist = utility.calculate_euclidean_distance(px,py, depot, node)
+                    elif utility.calculate_euclidean_distance(px, py, tour[-1], node) < next_node_dist:
+                        next_node = node
 
         # If no feasible node
-        if nextNode is None:
-            # tour.insert(0, depot)
-            # tour.append(depot)
+        if next_node is None:
+            tour.insert(0, depot)
+            tour.append(depot)
             route.append(tour)
             tour.clear()
-            tourDemand = 0
+            tour_demand = 0
         else:
-            tour.append(nextNode)
-            tourDemand += demand[nextNode]
+            tour.append(next_node)
+            tour_demand += demand[next_node]
         # Break if all nodes are in the route
-        if routeCheck(route, len(px), depot):
+        if route_check(route, len(px), depot):
             break
     return route
 
 
-def routeCheck(route, nodesLength, depot):
+def route_check(route, nodes_length, depot):
     count: int = 0
     for tour in route:
         for i in tour:
             if i != depot:
                 count += 1
-    return count == nodesLength
+    return count == nodes_length
 
-def routeContainsNode(route, node):
+def route_contains_node(route, node):
     for tour in route:
         for i in tour:
             if i is node:
@@ -126,8 +126,63 @@ def savings_heuristic(px, py, demand, capacity, depot):
     """
 
     # TODO - Implement the Saving Heuristic to generate VRP solutions.
+    # 1. Initialise routes (1,vi,1) for each node vi (except depot)
+
+    # 2. Compute and store the savings for each possible merge
+    #       - saving(vi,vj) = L(vi,1) + L(1, vj) - L(vi,vj)
+
+    # 3. Check all possible/feasible route merges
+    #       - merge route1 and route2: merge the last non-depot node of route1 and
+    #          the first non-depot node of route2
+
+    # 4. Select the merge with the largest saving and merge the routes
+
+    # 5. Repeat 3 and 4 until no more merges can be done
+
+    # Initialise routes
+    routes = []
+    for i in range(len(px)):
+        routes.add([depot, i, depot])
+    # Compute savings - record in dictionary
+    savings = dict
+    for i in range(len(routes)):
+        for j in range(len(routes)):
+            if i is j:
+                break
+            savings[str(i) + str(j)] = saving(i, j, depot, px, py)
+    # Check all feasible/route merges
+    while True:
+        merge = None
+        for i in range(len(routes)):
+            for j in range(len(routes)):
+                if i is j:
+                    break
+                current_saving = savings[str(i) + str(j)]
+                feasible = saving_feasible(current_saving, routes[i], routes[j])
+
+        if merge is None:
+            break
 
     return None
+
+
+def saving(node1, node2, depot, px, py):
+    return utility.calculate_euclidean_distance(px, py, node1, depot) + \
+           utility.calculate_euclidean_distance(px, py, depot, node2) - \
+           utility.calculate_euclidean_distance(px, py, node1, node2)
+
+
+def route_wo_depot(route, depot):
+    route_wo_depot = []
+    for i in route:
+        if i is not depot:
+            route_wo_depot.add(i)
+    return route_wo_depot
+
+
+def saving_feasible(saving, route1, route2):
+    # Check demand, capacity, and a node doesn't exist in both loops (possible?)
+    return False
 
 
 if __name__ == '__main__':
