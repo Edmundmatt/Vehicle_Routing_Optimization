@@ -83,20 +83,26 @@ def nearest_neighbour_heuristic(px, py, demand, capacity, depot):
 
         # If no feasible node
         if nextNode is None:
+            # tour.insert(0, depot)
+            # tour.append(depot)
             route.append(tour)
             tour.clear()
+            tourDemand = 0
         else:
             tour.append(nextNode)
-        if routeCheck(route, len(px)):
+            tourDemand += demand[nextNode]
+        # Break if all nodes are in the route
+        if routeCheck(route, len(px), depot):
             break
     return route
 
 
-def routeCheck(route, nodesLength):
+def routeCheck(route, nodesLength, depot):
     count: int = 0
     for tour in route:
         for i in tour:
-            count += 1
+            if i != depot:
+                count += 1
     return count == nodesLength
 
 def routeContainsNode(route, node):
