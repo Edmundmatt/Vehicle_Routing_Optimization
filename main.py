@@ -31,10 +31,10 @@ def main():
     # Executing and visualizing the saving VRP heuristic.
     # Uncomment it to do your assignment!
     
-    sh_solution = savings_heuristic(px, py, demand, capacity, depot)
-    sh_distance = utility.calculate_total_distance(sh_solution, px, py, depot)
-    print("Saving VRP Heuristic Distance:", sh_distance)
-    utility.visualise_solution(sh_solution, px, py, depot, "Savings Heuristic")
+    # sh_solution = savings_heuristic(px, py, demand, capacity, depot)
+    # sh_distance = utility.calculate_total_distance(sh_solution, px, py, depot)
+    # print("Saving VRP Heuristic Distance:", sh_distance)
+    # utility.visualise_solution(sh_solution, px, py, depot, "Savings Heuristic")
 
 
 def nearest_neighbour_heuristic(px, py, demand, capacity, depot):
@@ -49,68 +49,63 @@ def nearest_neighbour_heuristic(px, py, demand, capacity, depot):
     :param depot: Depot.
     :return: List of vehicle routes (tours).
     """
-
-    # TODO - Implement the Nearest Neighbour Heuristic to generate VRP solutions.
-    # 1. Initialise a solution: route starting from the depot
-
-    # 2. Append the nearest feasible node to the end of the current route
-    #       Feasible: node is unvisited, after insertion total demand of the route
-    #       does not exceed the capacity
-
-    # 3. If no feasible node, close the current route (return to the depot)
-    #       Create a new route starting from the depot
-
-    # 4. Repeat 2. and 3. until all nodes are visited
-    # Nodes identified by index
-    route = list()
+    # Initialise lists
+    routes = list()
     tour = list()
-    tour_demand = 0
-    while True: #Continues until all nodes are in the route
-        next_node = None
-        next_node_dist = sys.maxsize
-        #Find nearest feasible node
-        for node in range(len(px)):
-            # If the node is unvisited
-            if node not in tour and not route_contains_node(route, node):
-                # If capacity not exceeded after insertion
-                if tour_demand + demand[node] <= capacity:
-                    # See if nearest so far
-                    if len(tour) == 0:
-                        next_node = node
-                        next_node_dist = utility.calculate_euclidean_distance(px,py, depot, node)
-                    elif utility.calculate_euclidean_distance(px, py, tour[-1], node) < next_node_dist:
-                        next_node = node
+    visited = list()
+    tour_demand = 0.
+    tour.append(depot)
+    # Until all nodes are visited
+    while True:
+        # Get feasible nodes in order of distance only from the depot
+        if len(tour) == 1:
+            tour, distances = get_nodes_from_depot(tour, visited, capacity, px, py, depot, tour_demand, demand)
+        for i in range(len(px)):  # For the non-depot nodes
+            # Get the distance of other nodes to this from smallest to largest
+            distances[i] = utility.calculate_euclidean_distance(px, py, tour[-1], i)
+            distances_ordered = dict(sorted(distances.items(), key=lambda item: item[1]))
+            closest = list(distances_ordered.keys())
 
-        # If no feasible node
-        if next_node is None:
-            tour.insert(0, depot)
-            tour.append(depot)
-            route.append(tour)
-            tour.clear()
-            tour_demand = 0
-        else:
-            tour.append(next_node)
-            tour_demand += demand[next_node]
-        # Break if all nodes are in the route
-        if route_check(route, len(px), depot):
+            for j in closest:
+                if j not in tour and j not in visited:
+                    if capacity - tour_demand >= 0:
+                        # Add nodes to tour
+                        tour.append(j)
+                        visited.append(j)
+                        tour_demand += demand[j]
+                    else:
+                        # Add tour to route
+                        tour.append(depot)
+                        routes.append(tour)
+                        # Clear tour
+                        tour_demand = 0.
+                        tour.clear()
+                        tour.append(depot)
+        if len(visited) == len(px) - 1:
             break
-    return route
+    return routes
 
 
-def route_check(route, nodes_length, depot):
-    count: int = 0
-    for tour in route:
-        for i in tour:
-            if i != depot:
-                count += 1
-    return count == nodes_length
+def get_nodes_from_depot(tour, visited, capacity, px, py, depot, tour_demand, demand):
+    distances = {}
+    for i in range(len(px)):  # For all nodes
+        # Get the distance from the depot
+        distances[i] = utility.calculate_euclidean_distance(px, py, depot, i)
+    # Order the dictionary of euclidean distances from smallest to largest
+    distances_ordered = dict(sorted(distances.items(), key=lambda item: item[1]))
+    closest = list(distances_ordered.keys())
 
-def route_contains_node(route, node):
-    for tour in route:
-        for i in tour:
-            if i is node:
-                return True
-    return False
+    for i in closest:  # For nodes ordered by distance
+        if i not in tour and i not in visited:  # Check feasible
+            if capacity - tour_demand >= 0:
+                tour.append(i)  # Add node to tour
+                visited.append(i)  # Mark as visited
+                tour_demand += demand[i]  # Update the current demand of tour
+            else:
+                continue  # If not check next
+            break
+    return tour, distances
+
 
 def savings_heuristic(px, py, demand, capacity, depot):
 
