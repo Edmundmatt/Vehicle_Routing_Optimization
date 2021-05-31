@@ -31,10 +31,10 @@ def main():
     # Executing and visualizing the saving VRP heuristic.
     # Uncomment it to do your assignment!
     
-    # sh_solution = savings_heuristic(px, py, demand, capacity, depot)
-    # sh_distance = utility.calculate_total_distance(sh_solution, px, py, depot)
-    # print("Saving VRP Heuristic Distance:", sh_distance)
-    # utility.visualise_solution(sh_solution, px, py, depot, "Savings Heuristic")
+    sh_solution = savings_heuristic(px, py, demand, capacity, depot)
+    sh_distance = utility.calculate_total_distance(sh_solution, px, py, depot)
+    print("Saving VRP Heuristic Distance:", sh_distance)
+    utility.visualise_solution(sh_solution, px, py, depot, "Savings Heuristic")
 
 
 def nearest_neighbour_heuristic(px, py, demand, capacity, depot):
@@ -139,31 +139,44 @@ def savings_heuristic(px, py, demand, capacity, depot):
 
     # 5. Repeat 3 and 4 until no more merges can be done
 
-    # Initialise routes
+    # Initialise routes (skip the first - depot)
     routes = []
-    for i in range(len(px)):
-        routes.add([depot, i, depot])
+    for i in range(len(px))[1:]:
+        routes.append([depot, i, depot])
     # Compute savings - record in dictionary
-    savings = dict
+    savings = {}
+    for i in range(len(px)):
+        for j in range(len(px)):
+            if i is j:
+                break
+            savings[str(i) + str(j)] = saving(i, j, depot, px, py)
+
+    # Check all feasible/route merges
+    merges = {}
     for i in range(len(routes)):
         for j in range(len(routes)):
             if i is j:
                 break
-            savings[str(i) + str(j)] = saving(i, j, depot, px, py)
-    # Check all feasible/route merges
+            if merge_feasible(i, j, routes, demand, capacity):
+                # merge = [i, j]
+                merges[str(i) + str(j)] = [i, j]
+
+    # Merge highest saving merge
     while True:
-        merge = None
-        for i in range(len(routes)):
-            for j in range(len(routes)):
-                if i is j:
-                    break
-                current_saving = savings[str(i) + str(j)]
-                feasible = saving_feasible(current_saving, routes[i], routes[j])
-
-        if merge is None:
+        merge_key = None
+        highest_saving = None
+        for current_merge_key in merges:
+            current_merge_saving = savings[str(merges[current_merge_key][0]), str(merges[current_merge_key][1])]
+            if current_merge_saving > highest_saving:
+                merge_key = current_merge_key
+                highest_saving = current_merge_saving
+        # If there is no possible merge
+        if merge_key is None:
             break
+        else:
+            do_merge(merge_key, merges, routes)
 
-    return None
+    return routes
 
 
 def saving(node1, node2, depot, px, py):
@@ -173,17 +186,40 @@ def saving(node1, node2, depot, px, py):
 
 
 def route_wo_depot(route, depot):
-    route_wo_depot = []
+    new_route = []
     for i in route:
         if i is not depot:
-            route_wo_depot.add(i)
-    return route_wo_depot
+            new_route.append(i)
+    return new_route
 
 
-def saving_feasible(saving, route1, route2):
+def merge_feasible(i, j, routes, demand, capacity):
     # Check demand, capacity, and a node doesn't exist in both loops (possible?)
-    return False
+    route1 = routes[i]
+    route2 = routes[j]
+    route1.remove(route1[-1])
+    route2.remove(route2[0])
+    new_route = list(route1.extend(route2))
+    current_demand = 0
+    for k in new_route:
+        current_demand += demand[k]
+    if current_demand > capacity:
+        return False
+    else:
+        return True
 
+
+def do_merge(merge_key, merges, routes):
+    # Get routes
+    route1 = routes[merges[merge_key][0]]
+    route2 = routes[merges[merge_key][1]]
+    # Do merge
+    route1.remove(route1[-1])
+    route2.remove[0]
+    new_route = route1.extend(route2)
+    # Insert new route and remove old routes
+    routes[route1] = new_route
+    routes.remove(route2)
 
 if __name__ == '__main__':
     main()
