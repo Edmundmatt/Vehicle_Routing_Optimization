@@ -21,7 +21,6 @@ def main():
     utility.visualise_solution(vrp_best_sol, px, py, depot, "Optimal Solution")
 
     # Executing and visualizing the nearest neighbour VRP heuristic.
-    # Uncomment it to do your assignment!
 
     nnh_solution = nearest_neighbour_heuristic(px, py, demand, capacity, depot)
     nnh_distance = utility.calculate_total_distance(nnh_solution, px, py, depot)
@@ -29,7 +28,6 @@ def main():
     utility.visualise_solution(nnh_solution, px, py, depot, "Nearest Neighbour Heuristic")
 
     # Executing and visualizing the saving VRP heuristic.
-    # Uncomment it to do your assignment!
     
     # sh_solution = savings_heuristic(px, py, demand, capacity, depot)
     # sh_distance = utility.calculate_total_distance(sh_solution, px, py, depot)
@@ -120,7 +118,7 @@ def savings_heuristic(px, py, demand, capacity, depot):
     :return: List of vehicle routes (tours).
     """
 
-    # TODO - Implement the Saving Heuristic to generate VRP solutions.
+    # Implement the Saving Heuristic to generate VRP solutions.
     # 1. Initialise routes (1,vi,1) for each node vi (except depot)
 
     # 2. Compute and store the savings for each possible merge
